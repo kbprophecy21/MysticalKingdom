@@ -20,7 +20,7 @@ public class BuildingSystem : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.B)) // Press 'B' to start placing a building
         {
-            StartPlacing();
+            //StartPlacingTower();
         }
     }
 
@@ -57,7 +57,7 @@ public class BuildingSystem : MonoBehaviour
         }
     }
 
-    private void StartPlacing()
+    public void StartPlacingTower(GameObject ghostTowerPrefab)
     {
         isPlacing = true;
         if (previewObject == null)

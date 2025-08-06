@@ -1,16 +1,22 @@
 using UnityEngine;
 
-public class TopDownCameraController : MonoBehaviour
+public class CameraController : MonoBehaviour
 {
-    [Header("Pan Settings")]
-    public float panSpeed = 20f;
-    public Vector2 panLimitX = new Vector2(-30f, 15f);
-    public Vector2 panLimitZ = new Vector2(-50f, 20f);
+    public Transform cameraTransform;
 
-    [Header("Zoom Settings")]
-    public float zoomSpeed = 15f;
-    public float minY = 5f;
-    public float maxY = 20f;
+    // Boundaries based on 60x60 map
+    public float minX = 0f;
+    public float maxX = 60f;
+    public float minZ = 0f;
+    public float maxZ = 60f;
+
+    // Zoom limits
+    public float minZoom = 20f;
+    public float maxZoom = 100f;
+    public float zoomSpeed = 10f;
+
+    // Pan speed
+    public float panSpeed = 1f;
 
     private Vector3 lastMousePosition;
 
@@ -18,7 +24,7 @@ public class TopDownCameraController : MonoBehaviour
     {
         HandlePan();
         HandleZoom();
-        ClampPosition();
+        ClampCameraPosition();
     }
 
     void HandlePan()
@@ -27,41 +33,35 @@ public class TopDownCameraController : MonoBehaviour
         {
             lastMousePosition = Input.mousePosition;
         }
-        else if (Input.GetMouseButton(0))
+
+        if (Input.GetMouseButton(0))
         {
             Vector3 delta = Input.mousePosition - lastMousePosition;
-            Vector3 move = new Vector3(-delta.x, 0, -delta.y) * panSpeed * Time.deltaTime;
+            Vector3 move = new Vector3(-delta.x * panSpeed * Time.deltaTime, 0, -delta.y * panSpeed * Time.deltaTime);
 
-            transform.Translate(move, Space.World);
+            cameraTransform.Translate(move, Space.World);
             lastMousePosition = Input.mousePosition;
         }
     }
 
- void HandleZoom()
-{
-    float scroll = Input.GetAxis("Mouse ScrollWheel");
-    Camera cam = Camera.main;
-
-    if (cam.orthographic)
+    void HandleZoom()
     {
-        cam.orthographicSize -= scroll * zoomSpeed;
-        cam.orthographicSize = Mathf.Clamp(cam.orthographicSize, minY, maxY);
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        Vector3 pos = cameraTransform.position;
+        pos.y -= scroll * zoomSpeed;
+        pos.y = Mathf.Clamp(pos.y, minZoom, maxZoom);
+        cameraTransform.position = pos;
     }
-    else
-    {
-        Vector3 position = transform.position;
-        position.y -= scroll * zoomSpeed * 100 * Time.deltaTime;
-        position.y = Mathf.Clamp(position.y, minY, maxY);
-        transform.position = position;
-    }
-}
 
-
-    void ClampPosition()
+    void ClampCameraPosition()
     {
-        Vector3 position = transform.position;
-        position.x = Mathf.Clamp(position.x, panLimitX.x, panLimitX.y);
-        position.z = Mathf.Clamp(position.z, panLimitZ.x, panLimitZ.y);
-        transform.position = position;
+        Vector3 pos = cameraTransform.position;
+
+        // Optional: clamp based on current zoom to avoid seeing outside map
+        float buffer = 5f;
+        pos.x = Mathf.Clamp(pos.x, minX + buffer, maxX - buffer);
+        pos.z = Mathf.Clamp(pos.z, minZ + buffer, maxZ - buffer);
+
+        cameraTransform.position = pos;
     }
 }
